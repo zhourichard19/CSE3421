@@ -1,0 +1,50 @@
+/*Richard Zhou*/
+
+#include <string.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+int main(int argc, char *argv[]){
+
+    int sd;
+    int rc;
+    struct sockaddr_in server_address;
+    struct sockaddr_in from_address;
+    char buffer[100];
+    int flags = 0;
+    socklen_t fromLength = sizeof (struct sockaddr);
+
+    if(argc < 2){
+        printf("usage is: server <portnumber>\n");
+        exit(1);
+    }
+
+    sd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    int portNumber = atoi(argv[1]);
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(portNumber);
+    server_address.sin_addr.s_addr = INADDR_ANY;
+
+    rc = bind(sd, (struct sockaddr *)&server_address, sizeof(server_address));
+    if(rc < 0){
+        perror("bind");
+        exit(1);
+    }
+
+    for(;;){
+        memset(buffer,0,100);
+        rc = recvfrom(sd, buffer, sizeof(buffer), flags, (struct sockaddr *)&from_address, &fromLength);
+        if(rc <=0){
+            printf("some kind of error on recvfrom(). Going to quit\n");
+            break;
+        }
+        printf("I received %d bytes \n", rc);
+    }
+    
+    return 0;
+}

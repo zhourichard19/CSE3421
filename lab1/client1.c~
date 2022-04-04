@@ -1,0 +1,56 @@
+/*Richard Zhou*/
+
+#include <string.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <time.h>
+#include <unistd.h>
+#include <ctype.h>
+
+int sendStuff(char *buffer, int sd, struct sockaddr_in server_address);
+
+int main(int argc, char *argv[]){
+    int sd;
+    struct sockaddr_in server_address;
+    int portNumber;
+    char serverIP[29];
+    char buffer [100];
+
+    if (argc < 3){
+        printf("usage is in client <ipaddr> <portnumber>\n");
+        exit(1);
+    }
+
+    sd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    portNumber = strtol(argv[2], NULL, 10);
+    strcpy(serverIP, argv[1]);
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(portNumber);
+    server_address.sin_addr.s_addr = inet_addr(serverIP);
+
+    memset(buffer, '\0', 100);
+    sprintf(buffer, "hello world");
+    printf("you are sending '%s'\n", buffer);
+    printf("the length of the string is %lu bytes\n", strlen(buffer));
+
+    sendStuff(buffer, sd, server_address);
+    close(sd);
+    return 0;
+}
+
+int sendStuff(char*buffer, int sd, struct sockaddr_in server_address){
+    int rc = 0;
+    rc = sendto(sd, buffer, strlen(buffer), 0,(struct sockaddr *) &server_address, sizeof(server_address));
+
+    if(rc <=0){
+        printf("error, didn't send any bytes");
+        exit(1);
+    }
+    printf("I think i sent %d bytes \n",rc);
+    return 0;
+}
